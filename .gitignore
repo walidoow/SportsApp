@@ -5,4 +5,9 @@ node_modules/
 # macOS
 .DS_Store
 ClientApp/package-lock.json
+
 ClientApp/coverage
+
+# workspace file 
+sports-app.code-workspace
+
