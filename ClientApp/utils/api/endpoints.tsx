@@ -8,5 +8,6 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: 'user-service/auth/reset-password',
     GET_EVENT_BY_ID: 'event-service/event/{id}',
     JOIN_EVENT_BY_ID: 'event-service/event/{id}/join',
+    DELETE_PROFILE: 'user-service/user/{userId}',
   };
   
