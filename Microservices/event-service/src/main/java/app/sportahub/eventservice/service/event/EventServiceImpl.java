@@ -15,12 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import app.sportahub.eventservice.enums.EventSortingField;
+import app.sportahub.eventservice.enums.SortDirection;
 
 @Slf4j
 @Service
@@ -213,8 +217,9 @@ public class EventServiceImpl implements EventService {
      * @return a {@link Page} of {@link EventResponse} objects representing the events the user is participating in
      */
     @Override
-    public Page<EventResponse> getEventsByParticipantId(String userId, int page, int size) {     
-        Pageable pageable = PageRequest.of(page, size); 
+    public Page<EventResponse> getEventsByParticipantId(String userId, int page, int size, SortDirection sort, EventSortingField field) {  
+        Sort.Direction direction = sort == SortDirection.ASC ? Sort.Direction.ASC : Sort.Direction.DESC; 
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, field.getFieldName())); 
         Page<Event> events = eventRepository.findByParticipantsUserId(userId, pageable);   
         return events.map(event-> eventMapper.eventToEventResponse(event));
     }
@@ -228,8 +233,9 @@ public class EventServiceImpl implements EventService {
      * @return a {@link Page} of {@link EventResponse} objects representing the events created by the user
      */
     @Override
-    public Page<EventResponse> getEventsCreatedByUserId(String userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Page<EventResponse> getEventsCreatedByUserId(String userId, int page, int size, SortDirection sort, EventSortingField field) {
+        Sort.Direction direction = sort == SortDirection.ASC ? Sort.Direction.ASC : Sort.Direction.DESC; 
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, field.getFieldName()));
         Page<Event> events = eventRepository.findByCreatedBy(userId, pageable);
         return events.map(event -> eventMapper.eventToEventResponse(event));
     }
