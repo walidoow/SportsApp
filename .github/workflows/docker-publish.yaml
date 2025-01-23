@@ -34,7 +34,7 @@ jobs:
           # Remove duplicates
           unique_services=($(echo "${services[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
 
-          # Convert to JSON for use in matrix job
+          # Convert to JSON for use in the matrix job
           echo "json=[\"${unique_services[@]}\"]"
           echo "json=$(echo $json | jq -c)" >> $GITHUB_ENV
           echo "json=$json" >> $GITHUB_ENV
@@ -72,10 +72,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        working-directory: Microservices/${{ matrix.service }}
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./Microservices/${{ matrix.service }}
+          file: ./Microservices/${{ matrix.service }}/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ matrix.service }}-latest
+          tags: ghcr.io/${{ github.repository }}-${{ matrix.service }}:latest
