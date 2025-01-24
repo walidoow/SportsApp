@@ -43,7 +43,9 @@ jobs:
         run: |
           echo "Evaluating changed services..."
           services=()
-          for path in ${{ env.changed_files }}; do
+          # Convert changed_files into an array
+          IFS=',' read -ra FILES <<< "${{ env.changed_files }}"
+          for path in "${FILES[@]}"; do
             if [[ $path == Microservices/* ]]; then
               service=$(echo "$path" | cut -d'/' -f2)
               if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
@@ -59,12 +61,10 @@ jobs:
             json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
-          # Trim any spaces or newlines from the JSON string (if any)
-          json=$(echo $json | tr -d '[:space:]')
-
+          # Output the JSON of changed services
           echo "Resulting JSON: $json"
-          # Output the clean JSON to GITHUB_OUTPUT
-          printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
+          echo "json_services=$json" >> $GITHUB_OUTPUT
+
 
   build_and_deploy:
     name: Build and Deploy
