@@ -69,7 +69,8 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson(needs.determine_services.outputs.changed_services) || [] }}
+        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
+        # This will automatically handle empty or invalid outputs from the first job
 
     steps:
       - name: Debug Changed Services Output
