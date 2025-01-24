@@ -48,17 +48,17 @@ jobs:
                fi
               fi
             done
-          if [ ${#services[@]} -eq 0 ]; then
-            echo "No changed services detected."
-            json="[]"
-          else
-            # Convert services array to a JSON array
-            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
-          fi
+            if [ ${#services[@]} -eq 0 ]; then
+              echo "No changed services detected."
+              json="[]"
+            else
+              # Convert services array to a JSON array
+              json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
+            fi
 
-          echo "Resulting JSON: $json"
-          # Use printf to ensure properly formatted output
-          printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
+            echo "Resulting JSON: $json"
+            # Use printf to ensure properly formatted output
+            printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
