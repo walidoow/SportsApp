@@ -98,10 +98,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase repository and service
+        id: lowercase
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          SERVICE_NAME=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+          echo "repo_name=$REPO_NAME" >> $GITHUB_ENV
+          echo "service_name=$SERVICE_NAME" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: ./Microservices/${{ matrix.service }}
           file: ./Microservices/${{ matrix.service }}/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}-${{ matrix.service }}:latest
+          tags: ghcr.io/${{ env.repo_name }}-${{ env.service_name }}:latest
