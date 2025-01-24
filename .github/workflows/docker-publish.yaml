@@ -38,27 +38,30 @@ jobs:
       - name: Determine changed services
         id: determine
         run: |
-            echo "Evaluating changed services..."
-            services=()
-            for path in ${{ env.changed_files }}; do
-              if [[ $path == Microservices/* ]]; then
-                service=$(echo "$path" | cut -d'/' -f2)
-                if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
-                  services+=("$service")
-               fi
+          echo "Evaluating changed services..."
+          services=()
+          for path in ${{ env.changed_files }}; do
+            if [[ $path == Microservices/* ]]; then
+              service=$(echo "$path" | cut -d'/' -f2)
+              if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
+                services+=("$service")
               fi
-            done
-            if [ ${#services[@]} -eq 0 ]; then
-              echo "No changed services detected."
-              json="[]"
-            else
-              # Convert services array to a JSON array
-              json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
             fi
+          done
 
-            echo "Resulting JSON: $json"
-            # Use printf to ensure properly formatted output
-            printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
+          if [ ${#services[@]} -eq 0 ]; then
+            echo "No changed services detected."
+            json="[]"
+          else
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
+          fi
+
+          # Trim any spaces or newlines from the JSON string (if any)
+          json=$(echo $json | tr -d '[:space:]')
+
+          echo "Resulting JSON: $json"
+          # Output the clean JSON to GITHUB_OUTPUT
+          printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
