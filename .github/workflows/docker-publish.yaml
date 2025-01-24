@@ -26,6 +26,10 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
           echo "changed_files=$CHANGED_FILES" >> $GITHUB_ENV
 
+      - name: Debug Changed Services Output
+        run: |
+          echo "Raw Changed Services Output: ${{ needs.determine_services.outputs.changed_services }}"
+
       - name: Determine changed services
         id: changed_services
         run: |
@@ -65,7 +69,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson(needs.determine_services.outputs.changed_services) || '[]' }}
+        service: ${{ fromJson(needs.determine_services.outputs.changed_services) || [] }}
 
     steps:
       - name: Debug Changed Services Output
