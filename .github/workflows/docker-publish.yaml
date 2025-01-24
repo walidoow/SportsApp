@@ -11,12 +11,21 @@ jobs:
     name: Determine changed services
     runs-on: ubuntu-latest
     outputs:
-      changed_services: ${{ steps.determine.outputs.services }}
+      changed_services: ${{ steps.determine.outputs.json_services }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Check for jq tool
+        run: |
+          if ! command -v jq &> /dev/null
+          then
+              echo "jq could not be found"
+              exit 1
+          fi
+          echo "jq is installed."
 
       - name: Get list of changed files
         id: git_changes
@@ -42,19 +51,15 @@ jobs:
 
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected."
-            services_output=""
+            json="[]"
           else
-            # Join services into a newline-separated list
-            services_output=$(printf "%s\n" "${services[@]}")
+            # Convert the service array to a JSON array
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
-          echo "Services to be processed:"
-          echo "$services_output"
-
-          # Write to GITHUB_OUTPUT
-          echo "services<<EOF" >> $GITHUB_OUTPUT
-          echo "$services_output" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Resulting JSON: $json"
+          # Export to GITHUB_OUTPUT
+          echo "json_services=$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
@@ -62,7 +67,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromEntries(split(needs.determine_services.outputs.changed_services, '\n')) }}
+        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
     steps:
       - name: Debug Matrix Value
         run: |
