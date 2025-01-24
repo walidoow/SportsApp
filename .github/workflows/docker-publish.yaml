@@ -44,8 +44,8 @@ jobs:
             echo "No changed services detected."
             services_output=""
           else
-            # Join services into a comma-separated list
-            services_output=$(IFS=,; echo "${services[*]}")
+            # Join services into a newline-separated list
+            services_output=$(printf '%s\n' "${services[@]}")
           fi
 
           echo "Services to be processed: $services_output"
@@ -57,7 +57,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: [${{ needs.determine_services.outputs.changed_services }}]
+        service: ${{ fromJson('["' + join('","', needs.determine_services.outputs.changed_services) + '"]') }}
     steps:
       - name: Debug Matrix Value
         run: |
