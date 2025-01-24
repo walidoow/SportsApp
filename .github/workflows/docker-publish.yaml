@@ -20,17 +20,16 @@ jobs:
         id: git_changes
         run: |
           echo "Determining changed files..."
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-          echo "changed_files=$CHANGED_FILES" >> $GITHUB_ENV
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD~1 HEAD | tr '\n' ' ')
+          echo "Changed files: $CHANGED_FILES"
+          echo "::set-output name=changed_files::$CHANGED_FILES"
 
       - name: Determine changed services
         id: changed_services
         run: |
           echo "Evaluating changed services..."
           services=()
-          for path in ${{ env.changed_files }}; do
+          for path in ${{ steps.git_changes.outputs.changed_files }}; do
             if [[ $path == Microservices/* ]]; then
               service=$(echo "$path" | cut -d'/' -f2)
               if [[ ! " ${services[*]} " =~ " ${service} " ]]; then
@@ -39,16 +38,14 @@ jobs:
             fi
           done
 
-          # Check if any services found
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected. Exiting with error."
             exit 1
           fi
 
-          # Convert to JSON array
           json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           echo "Resulting JSON: $json"
-          echo "json=$json" >> $GITHUB_ENV
+          echo "::set-output name=json::$json"
 
   build_and_deploy:
     name: Build and Deploy
