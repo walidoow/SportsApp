@@ -55,16 +55,12 @@ jobs:
           json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           echo "Resulting JSON: $json"
 
-          # Trim the JSON output to remove leading/trailing whitespace and set it as an environment variable
-          json_trimmed=$(echo $json | xargs)
-          echo "json=$json_trimmed" >> $GITHUB_ENV
-
-          # Set the output
-          echo "::set-output name=changed_services::$json_trimmed"
+          # Set environment variable for next job
+          echo "CHANGED_SERVICES=$json" >> $GITHUB_ENV
 
       - name: Debug Changed Services
         run: |
-          echo "Changed services: ${{ env.json }}"
+          echo "Changed services: ${{ env.CHANGED_SERVICES }}"
 
   build_and_deploy:
     name: Build and Deploy
@@ -72,7 +68,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
+        service: ${{ fromJson(env.CHANGED_SERVICES) }}
         # This will automatically handle empty or invalid outputs from the first job
 
     steps:
