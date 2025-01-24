@@ -38,28 +38,27 @@ jobs:
       - name: Determine changed services
         id: determine
         run: |
-          echo "Evaluating changed services..."
-          services=()
-          for path in ${{ env.changed_files }}; do
-            if [[ $path == Microservices/* ]]; then
-              service=$(echo "$path" | cut -d'/' -f2)
-              if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
-                services+=("$service")
+            echo "Evaluating changed services..."
+            services=()
+            for path in ${{ env.changed_files }}; do
+              if [[ $path == Microservices/* ]]; then
+                service=$(echo "$path" | cut -d'/' -f2)
+                if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
+                  services+=("$service")
+               fi
               fi
-            fi
-          done
-
+            done
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected."
             json="[]"
           else
-            # Convert the service array to a JSON array
+            # Convert services array to a JSON array
             json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
           echo "Resulting JSON: $json"
-          # Export to GITHUB_OUTPUT
-          echo "json_services=$json" >> $GITHUB_OUTPUT
+          # Use printf to ensure properly formatted output
+          printf "json_services=%s\n" "$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
