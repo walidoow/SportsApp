@@ -11,7 +11,7 @@ jobs:
     name: Determine changed services
     runs-on: ubuntu-latest
     outputs:
-      changed_services: ${{ steps.determine.outputs.services }}
+      changed_services: ${{ steps.determine.outputs.json }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -44,12 +44,13 @@ jobs:
             echo "No changed services detected."
             json="[]"
           else
-            # Convert services array to JSON
+            # Properly construct a JSON array using jq
             json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
           echo "Resulting JSON: $json"
-          echo "services=$json" >> $GITHUB_OUTPUT
+          # Use printf to avoid issues with special characters or spacing
+          printf "json=%s\n" "$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
