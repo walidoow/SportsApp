@@ -62,7 +62,7 @@ jobs:
           fi
 
           # Trim spaces and newlines
-          json=$(echo "$json" | tr -d '[:space:]')
+          json=$(echo "$json" | jq -c)
 
           # Output the cleaned JSON to GITHUB_OUTPUT
           echo "Resulting JSON: $json"
