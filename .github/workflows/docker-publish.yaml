@@ -61,10 +61,12 @@ jobs:
             json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
-          # Output the JSON of changed services
+          # Trim spaces and newlines
+          json=$(echo "$json" | tr -d '[:space:]')
+
+          # Output the cleaned JSON to GITHUB_OUTPUT
           echo "Resulting JSON: $json"
           echo "json_services=$json" >> $GITHUB_OUTPUT
-
 
   build_and_deploy:
     name: Build and Deploy
