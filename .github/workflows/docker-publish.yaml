@@ -1,5 +1,4 @@
 name: Build and Deploy Microservices
-
 on:
   push:
     branches:
@@ -12,8 +11,7 @@ jobs:
     name: Determine changed services
     runs-on: ubuntu-latest
     outputs:
-      changed_services: ${{ steps.changed_services.outputs.json }}
-
+      changed_services: ${{ steps.determine.outputs.json }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -24,46 +22,29 @@ jobs:
         id: git_changes
         run: |
           echo "Determining changed files..."
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | tr '\n' ' ')
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
           echo "Changed files: $CHANGED_FILES"
           echo "changed_files=$CHANGED_FILES" >> $GITHUB_ENV
 
-      - name: Debug Changed Services Output
-        run: |
-          echo "Raw Changed Services Output: ${{ needs.determine_services.outputs.changed_services }}"
-
       - name: Determine changed services
-        id: changed_services
+        id: determine
         run: |
           echo "Evaluating changed services..."
           services=()
           for path in ${{ env.changed_files }}; do
-            echo "Processing: $path"
             if [[ $path == Microservices/* ]]; then
               service=$(echo "$path" | cut -d'/' -f2)
-              echo "Detected service: $service"
-              if [[ ! " ${services[*]} " =~ " ${service} " ]]; then
+              if [[ ! " ${services[@]} " =~ " ${service} " ]]; then
                 services+=("$service")
               fi
             fi
           done
-
-          # Check if any services found
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected."
           fi
-
-          # Convert to JSON array and trim any unwanted whitespace
+          # Create a JSON string from the array
           json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
-          echo "Resulting JSON: $json"
-
-          # Trim the JSON output to remove leading/trailing whitespace and set it as an environment variable
-          json_trimmed=$(echo $json | xargs)
-          echo "json=$json_trimmed" >> $GITHUB_ENV
-
-      - name: Debug Changed Services
-        run: |
-          echo "Changed services: ${{ env.json }}"
+          echo "json=$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
@@ -72,8 +53,6 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
-        # Ensure the matrix processes the service names correctly.
-
     steps:
       - name: Debug Matrix Value
         run: |
