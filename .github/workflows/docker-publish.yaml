@@ -11,7 +11,7 @@ jobs:
     name: Determine changed services
     runs-on: ubuntu-latest
     outputs:
-      changed_services: ${{ steps.determine.outputs.json }}
+      changed_services: ${{ steps.determine.outputs.services }}
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -42,14 +42,14 @@ jobs:
 
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected."
-            json="[]"
+            services_output=""
           else
-            # Create a JSON array using jq
-            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
+            # Join services into a newline-separated list
+            services_output=$(printf '%s\n' "${services[@]}")
           fi
 
-          echo "Resulting JSON: $json"
-          echo "json=$json" >> $GITHUB_OUTPUT
+          echo "Services to be processed: $services_output"
+          echo "services=$(echo $services_output | tr ' ' '\n')" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
@@ -57,7 +57,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
+        service: ${{ fromJson('["' + join('","', needs.determine_services.outputs.changed_services.split('\n')) + '"]') }}
     steps:
       - name: Debug Matrix Value
         run: |
