@@ -58,11 +58,8 @@ jobs:
             echo "No changed services detected."
             json="[]"
           else
-            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s . | jq -c)
           fi
-
-          # Trim spaces and newlines
-          json=$(echo "$json" | jq -c)
 
           # Output the cleaned JSON to GITHUB_OUTPUT
           echo "Resulting JSON: $json"
