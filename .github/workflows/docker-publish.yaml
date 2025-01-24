@@ -26,14 +26,20 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
           echo "::set-output name=changed_files::$CHANGED_FILES"
 
+      - name: Debug Changed Files
+        run: |
+          echo "Changed files: ${{ steps.git_changes.outputs.changed_files }}"
+
       - name: Determine changed services
         id: changed_services
         run: |
           echo "Evaluating changed services..."
           services=()
           for path in ${{ steps.git_changes.outputs.changed_files }}; do
+            echo "Processing: $path"
             if [[ $path == Microservices/* ]]; then
               service=$(echo "$path" | cut -d'/' -f2)
+              echo "Detected service: $service"
               if [[ ! " ${services[*]} " =~ " ${service} " ]]; then
                 services+=("$service")
               fi
@@ -51,16 +57,19 @@ jobs:
           echo "Resulting JSON: $json"
           echo "::set-output name=json::$json"
 
-
   build_and_deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
+        service: ${{ fromJson(needs.determine_services.outputs.changed_services || '[]') }}
 
     steps:
+      - name: Debug Changed Services Output
+        run: |
+          echo "Changed services: ${{ needs.determine_services.outputs.changed_services }}"
+
       - name: Check out the repository
         uses: actions/checkout@v4
 
