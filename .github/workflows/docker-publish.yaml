@@ -18,11 +18,17 @@ jobs:
 
       - name: Get list of changed files
         id: git_changes
-        run: echo "changed_files=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | tr '\n' ' ')" >> $GITHUB_ENV
+        run: |
+          echo "Determining changed files..."
+          git diff-tree --no-commit-id --name-only -r ${{ github.sha }} > changed_files.txt
+          echo "Changed files:"
+          cat changed_files.txt
+          echo "changed_files=$(cat changed_files.txt | tr '\n' ' ')" >> $GITHUB_ENV
 
       - name: Determine changed services
         id: changed_services
         run: |
+          echo "Evaluating changed services..."
           services=()
           for path in ${{ env.changed_files }}; do
             if [[ $path == Microservices/* ]]; then
@@ -31,12 +37,13 @@ jobs:
             fi
           done
 
-          # Remove duplicates
+          # Remove duplicates and prepare JSON
           unique_services=($(echo "${services[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+          echo "Unique services found: ${unique_services[@]}"
 
-          # Convert to JSON for use in the matrix job
-          echo "json=[\"${unique_services[@]}\"]"
-          echo "json=$(echo $json | jq -c)" >> $GITHUB_ENV
+          # Write JSON array
+          json=$(printf '%s\n' "${unique_services[@]}" | jq -R . | jq -s .)
+          echo "Resulting JSON: $json"
           echo "json=$json" >> $GITHUB_ENV
 
   build_and_deploy:
