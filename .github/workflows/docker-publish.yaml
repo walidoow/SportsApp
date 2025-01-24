@@ -47,10 +47,13 @@ jobs:
             echo "No changed services detected."
           fi
 
-          # Convert to JSON array
+          # Convert to JSON array and trim any unwanted whitespace
           json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           echo "Resulting JSON: $json"
-          echo "json=$json" >> $GITHUB_ENV
+
+          # Trim the JSON output to remove leading/trailing whitespace and set it as an environment variable
+          json_trimmed=$(echo $json | xargs)
+          echo "json=$json_trimmed" >> $GITHUB_ENV
 
       - name: Debug Changed Services
         run: |
