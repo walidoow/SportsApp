@@ -42,14 +42,14 @@ jobs:
 
           if [ ${#services[@]} -eq 0 ]; then
             echo "No changed services detected."
-            services_output=""
+            json="[]"
           else
-            # Join services into a newline-separated list
-            services_output=$(printf '%s\n' "${services[@]}")
+            # Convert services array to JSON
+            json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s .)
           fi
 
-          echo "Services to be processed: $services_output"
-          echo "services=$services_output" >> $GITHUB_OUTPUT
+          echo "Resulting JSON: $json"
+          echo "services=$json" >> $GITHUB_OUTPUT
 
   build_and_deploy:
     name: Build and Deploy
@@ -57,7 +57,7 @@ jobs:
     needs: determine_services
     strategy:
       matrix:
-        service: ${{ fromJson('["' + join('","', needs.determine_services.outputs.changed_services) + '"]') }}
+        service: ${{ fromJson(needs.determine_services.outputs.changed_services) }}
     steps:
       - name: Debug Matrix Value
         run: |
