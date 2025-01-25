@@ -30,8 +30,10 @@ jobs:
       - name: Get list of changed files
         id: git_changes
         run: |
-          echo "Determining changed files..."
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          echo "Determining changed files across all commits in this push..."
+          # Find the commit range for the current push
+          BASE=$(git rev-parse origin/main) # or get it from previous HEAD if needed
+          CHANGED_FILES=$(git diff --name-only $BASE HEAD)
           echo "Changed files: $CHANGED_FILES"
 
           # Make sure changed files are properly formatted for GITHUB_ENV
@@ -68,6 +70,9 @@ jobs:
   build_and_deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: determine_services
     strategy:
       matrix:
