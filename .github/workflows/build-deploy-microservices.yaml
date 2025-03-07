@@ -149,7 +149,7 @@ jobs:
 
       - name: Update Helm release
         run: |
-          helm upgrade --install ${{ matrix.service }} ./helm/${{ matrix.service }}-chart \
+          helm upgrade --install ${{ matrix.service }} ./.helm/${{ matrix.service }}-chart \
             --set image.repository=ghcr.io/${{ env.repo_name }}-${{ env.service_name }} \
             --set image.tag=latest
 
