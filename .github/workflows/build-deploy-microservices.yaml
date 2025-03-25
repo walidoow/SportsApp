@@ -92,12 +92,17 @@ jobs:
       - name: Grant execute permissions for gradlew
         run: chmod +x Microservices/${{ matrix.service }}/gradlew
 
+      - name: Confirm Actor and Token
+        run: |
+          echo "GitHub Actor: ${{ github.actor }}"
+          echo "GitHub Token: ${{ secrets.GITHUB_TOKEN }}"
+
       - name: Build with Gradle
         working-directory: Microservices/${{ matrix.service }}
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build --info
 
       - name: Determine JAR File Name
         id: jar
